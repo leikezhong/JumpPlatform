@@ -133,7 +133,7 @@ cc.Class({
         this.world = null;
     },
 
-    initCharParams:function(host){
+    initEntityParams:function(host){
         host.terrainResult = false;
         host.terrainI = 0;
         host.terrainLen = 0;
@@ -221,7 +221,7 @@ cc.Class({
         host.hasGravity = value;
     },
 
-    setCharBodyVel:function(host, velX, velY){
+    setEntityBodyVel:function(host, velX, velY){
         if(!host.hasGravity)    return;
         if(host.terrainBody){
             host.nowBodyVel.x = velX * this.pixelToMeter;
@@ -230,15 +230,15 @@ cc.Class({
         }
     },
 
-    setCharTerrainPos:function(host, xPos, yPos){
+    setEntityTerrainPos:function(host, xPos, yPos){
         host.terrainBody.SetAwake(true);
         host.terrainBody.SetPositionXY(xPos * this.pixelToMeter, yPos * this.pixelToMeter);
     },
 
-    terrainCharStart:function(host, entity, contact){
+    terrainEntityStart:function(host, entity, contact){
         //平台判断
         if(entity.entityType == shareDefine.ENTITY_TYPE.PLATFORM){
-            if(host.nowCharPos.y < entity.maxTopY - 5){
+            if(host.nowEntityPos.y < entity.maxTopY - 5){
                 contact.SetEnabled(false);
                 return;
             }
@@ -259,9 +259,9 @@ cc.Class({
         }
     },
 
-    terrainCharPre:function(host, entity, contact){
+    terrainEntityPre:function(host, entity, contact){
         if(entity.entityType == shareDefine.ENTITY_TYPE.PLATFORM){
-            if(host.nowCharPos.y < entity.maxTopY - 5){   
+            if(host.nowEntityPos.y < entity.maxTopY - 5){   
                 contact.SetEnabled(false);
                 return;
             }
@@ -272,7 +272,7 @@ cc.Class({
         }
     },
 
-    terrainCharSeq:function(host, entity, contact){
+    terrainEntitySeq:function(host, entity, contact){
         if(entity.entityType == shareDefine.ENTITY_TYPE.PLATFORM){
             if(contact){
                 contact.SetEnabled(true);
@@ -302,7 +302,7 @@ cc.Class({
                             host.floatStatus = false;
                             break;
                         }
-                        if(host.nowCharPos.y > host.terrainEntityArr[host.terrainI].maxTopY - 5){
+                        if(host.nowEntityPos.y > host.terrainEntityArr[host.terrainI].maxTopY - 5){
                             host.floatStatus = false;
                             break;
                         }
@@ -312,6 +312,12 @@ cc.Class({
                     host.isFloat = true;
                 }else{
                     if(host.terrainBody.GetLinearVelocity().y <= 0){
+                        if(host.jumpCount > 0){
+                            if(host.nowMaxPosY > host.nowEntityPos.y){
+                                battle.battleManager.gameOver();
+                            }
+                        }
+                        host.nowMaxPosY = host.nowEntityPos.y;
                         host.isFloat = false;
                         host.jumpCount = 0;
                     }

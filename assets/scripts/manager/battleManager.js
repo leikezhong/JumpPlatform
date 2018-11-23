@@ -1,10 +1,9 @@
 var starEntity = require("starEntity");
 var floorEntity = require("floorEntity");
+var platformEntity = require("platformEntity");
 cc.Class({
     init:function () {
         // console.log("---init battleManager---");
-        this.nowAllScore = 0;//score
-        this.nowEnergy = 100;
     },
 
     initBattle:function(){
@@ -17,11 +16,20 @@ cc.Class({
     initParams:function(){
         this.frameSize = cc.view.getFrameSize();
         this.winSize = cc.director.getWinSize();
+        this.nowAllScore = 0;//score
+        this.nowEnergy = 100;
         this.isGameOver = false;
         this.allFloors = [];
         this.jumpPressStart = false;
         this.jumpPressDirect = 1;
+        this.jumpPressVelYInit = 200;
         this.jumpPressVelYMax = 700;
+
+        this.nowPlatformMaxY = 0;
+        this.minPlatformWid = 150;
+        this.maxPlatformWid = 200;
+        this.minPlatformY = 200;
+        this.maxPlatformY = 150;
         
         // console.log("winSize: ", this.winSize);
         // console.log("frameSize: ", this.frameSize);
@@ -68,21 +76,25 @@ cc.Class({
     initEntity:function(){
         this.mainEntity = new starEntity();
         this.mainEntity.init(cc.v2(0, -400), 60, 90);
+        battle.visionManager.setVisionEntity(this.mainEntity);
 
-        this.mainFloor = new floorEntity();
-        this.mainFloor.init(cc.v2(0, -500), 800, 200);
-        this.allFloors.push(this.mainFloor);
+        var floor = new floorEntity();
+        floor.init(cc.v2(0, -500), 800, 200);
+        this.nowPlatformMaxY = floor.maxTopY;
+        this.allFloors.push(floor);
     },
 
     onJumpPress:function(event){
+        if(this.isGameOver) return;
         if(this.mainEntity){
             this.jumpPressStart = true;
             this.jumpPressDirect = 1;
-            this.mainEntity.jumpVelY = 0;
+            this.mainEntity.jumpVelY = this.jumpPressVelYInit;
         }
     },
 
     onJumpRelease:function(event){
+        if(this.isGameOver) return;
         if(this.mainEntity){
             this.jumpPressStart = false;
             this.mainEntity.startJump();
@@ -125,21 +137,52 @@ cc.Class({
     mainStep:function(){
         if(this.jumpPressStart){
             if(this.mainEntity.jumpVelY > this.jumpPressVelYMax
-             || this.mainEntity.jumpVelY < 0){
+             || this.mainEntity.jumpVelY < this.jumpPressVelYInit){
                 this.jumpPressDirect = -this.jumpPressDirect;
             }
             this.mainEntity.jumpVelY += this.jumpPressDirect * 10;
-            console.log(this.mainEntity.jumpVelY);
-            this.energyBar.progress = this.mainEntity.jumpVelY / this.jumpPressVelYMax;
+            this.energyBar.progress = (this.mainEntity.jumpVelY - this.jumpPressVelYInit) / (this.jumpPressVelYMax - this.jumpPressVelYInit);
         }
     },
 
     createPlatformStep:function(){
-        this.createSunCount++;
-        
+        if(this.mainEntity){
+            if(this.nowPlatformMaxY < this.mainEntity.nowEntityPos.y + 1000){
+                let platform = new platformEntity();
+                let platformWid = this.minPlatformWid + this.getRandom() * this.maxPlatformWid, platformPosX = platformWid * .5 + (this.winSize.width - platformWid) * this.getRandom() - this.winSize.width * .5, platformPosY = this.nowPlatformMaxY + this.minPlatformY + this.getRandom() * this.maxPlatformY;
+                platform.init(cc.v2(platformPosX, platformPosY), platformWid, 60);
+                this.nowPlatformMaxY = platform.maxTopY;
+                this.allFloors.push(platform);
+
+                if(this.nowPlatformMaxY > 2000 && this.nowPlatformMaxY < 4000){
+                    this.minPlatformWid = 120;
+                    this.maxPlatformWid = 250;
+                    this.minPlatformY = 200;
+                    this.maxPlatformY = 200;
+                }else if(this.nowPlatformMaxY >= 4000 && this.nowPlatformMaxY < 8000){
+                    this.minPlatformWid = 100;
+                    this.maxPlatformWid = 200;
+                    this.minPlatformY = 200;
+                    this.maxPlatformY = 250;
+                }else if(this.nowPlatformMaxY >= 8000){
+                    this.minPlatformWid = 50;
+                    this.maxPlatformWid = 180;
+                    this.minPlatformY = 200;
+                    this.maxPlatformY = 300;
+                }
+            }
+        }
     },
 
     clear:function(){
+        if(this.mainEntity){
+            this.mainEntity.clear();
+            this.mainEntity = null;
+        }
+        for(let i = 0; i < this.allFloors.length; i++){
+            this.allFloors[i].clear();
+            this.allFloors[i] = null;
+        }
         this.nowAllScore = 0;
         this.nowEnergy = 100;
     }

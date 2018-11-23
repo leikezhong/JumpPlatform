@@ -81,5 +81,6 @@ cc.Class({
             battle.physicsManager.destroyBody(this.terrainBody);
             this.terrainBody = null;
         }
+        this._super();
     }
 });

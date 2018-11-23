@@ -3,7 +3,9 @@ cc.Class({
 
     properties: {
         mainLayer:cc.Node,
-        uiLayer:cc.Node
+        touchLayer:cc.Node,
+        uiLayer:cc.Node,
+        camera:cc.Node
     },
 
     start:function(){
@@ -24,7 +26,8 @@ cc.Class({
             "poolManager",
             "posManager",
             "resourceManager",
-            "shadowManager"
+            "shadowManager",
+            "visionManager"
         ];
 
         for(let i = 0; i < this.allManager.length; i++){
@@ -43,11 +46,12 @@ cc.Class({
         battle.physicsManager.initPhy();
         battle.battleManager.initBattle();
         battle.shadowManager.initAllShadowInfo();
+        battle.visionManager.initVision(this.camera);
     },
 
     initParams:function(){
-        this.mainLayer.on(cc.Node.EventType.TOUCH_START, this.onJumpPressFunc, this);
-        this.mainLayer.on(cc.Node.EventType.TOUCH_END, this.onJumpReleaseFunc, this);
+        this.touchLayer.on(cc.Node.EventType.TOUCH_START, this.onJumpPressFunc, this);
+        this.touchLayer.on(cc.Node.EventType.TOUCH_END, this.onJumpReleaseFunc, this);
     },
 
     onJumpPressFunc:function(event){
@@ -60,6 +64,7 @@ cc.Class({
 
     update:function(dt){
         battle.battleManager.step();
+        battle.visionManager.step();
         battle.entityManager.step();
         battle.physicsManager.step();
     },
@@ -72,7 +77,6 @@ cc.Class({
         console.log("battle scene clear!!!");
         battle.battleManager.clear();
         battle.poolManager.clear();
-        battle.enterFrameManager.clear();
         battle.entityManager.clear();
         battle.layerManager.clear();
         battle.resourceManager.clear();
